@@ -1,128 +1,70 @@
 from display import *
 from matrix import *
 from math import *
-from gmath import *
 
-def scanline_convert(polygons, i, screen, zbuffer, color ):
-    flip = False
-    BOT = 0
-    TOP = 2
-    MID = 1
+def add_box( points, x, y, z, width, height, depth ):
+    add_edge(points, x, y, z, x+width, y, z)
+    add_edge(points, x, y, z, x, y-height, z)
+    add_edge(points, x, y, z, x, y, z-depth)
+    add_edge(points, x+width, y, z, x+width, y-height, z)
+    add_edge(points, x, y-height, z, x+width, y-height, z)
+    add_edge(points, x+width, y, z, x+width, y, z-depth)
+    add_edge(points, x, y-height, z, x, y-height, z-depth)
+    add_edge(points, x+width, y-height, z, x+width, y-height, z-depth)
+    add_edge(points, x, y, z-depth, x+width, y, z-depth)
+    add_edge(points, x, y, z-depth, x, y-height, z-depth)
+    add_edge(points, x+width, y, z-depth, x+width, y-height, z-depth)
+    add_edge(points, x, y-height, z-depth, x+width, y-height, z-depth)
 
-    points = [ (polygons[i][0], polygons[i][1], polygons[i][2]),
-               (polygons[i+1][0], polygons[i+1][1], polygons[i+1][2]),
-               (polygons[i+2][0], polygons[i+2][1], polygons[i+2][2]) ]
+def add_sphere( points, cx, cy, cz, r, step ):
+    for edge in generate_sphere(points, cx, cy, cz, r, step):
+        add_edge(points, edge[0], edge[1], edge[2],
+                     edge[0] + 1, edge[1] + 1, edge[2] + 1)
+        
+def generate_sphere( points, cx, cy, cz, r, step ):
+    i0 = 1
+    ans = []
+    ans.append([r + cx, cy, cz])
+    while i0 <= step:
+        t0 = float(i0)/step
+        i = 1
+        while i <= step/2:
+            t = float(i)/step
+            x = r * math.cos(2 * math.pi * t) + cx
+            y = r * math.sin(2 * math.pi * t) * math.cos(2 * math.pi * t0) + cy
+            z = r * math.sin(2 * math.pi * t) * math.sin(2 * math.pi * t0) + cz
+            edge = [x,y,z]
+            ans.append(edge)
+            i+=1
+        i0+=1
+    return ans
 
-    # color = [0,0,0]
-    # color[RED] = (23*(i/3)) %256
-    # color[GREEN] = (109*(i/3)) %256
-    # color[BLUE] = (227*(i/3)) %256
+def add_torus( points, cx, cy, cz, r0, r1, step ):
+    for edge in generate_torus(points, cx, cy, cz, r0, r1, step):
+        add_edge(points, edge[0], edge[1], edge[2],
+                     edge[0] + 1, edge[1] + 1, edge[2] + 1)
 
-    points.sort(key = lambda x: x[1])
-    x0 = points[BOT][0]
-    z0 = points[BOT][2]
-    x1 = points[BOT][0]
-    z1 = points[BOT][2]
-    y = int(points[BOT][1])
+def generate_torus( points, cx, cy, cz, r0, r1, step ):
+    i0 = 1
+    ans = []
+    ans.append([r0 + r1 + cx, cy, r1 + cz])
+    while i0 <= step:
+        t0 = float(i0)/step
+        i = 1
+        while i <= step:
+            t = float(i)/step
+            x = math.cos(2 * math.pi * t0) * (r0 * math.cos(2 * math.pi * t) + r1) + cx
+            y = r0 * math.sin(2 * math.pi * t) + cy
+            z = -1 * math.sin(2 * math.pi * t0) * (r0 * math.cos(2 * math.pi * t) + r1) + cz
+            edge = [x,y,z]
+            ans.append(edge)
+            i+=1
+        i0+=1
+    return ans
 
-    distance0 = int(points[TOP][1]) - y * 1.0
-    distance1 = int(points[MID][1]) - y * 1.0
-    distance2 = int(points[TOP][1]) - int(points[MID][1]) * 1.0
-
-    dx0 = (points[TOP][0] - points[BOT][0]) / distance0 if distance0 != 0 else 0
-    dz0 = (points[TOP][2] - points[BOT][2]) / distance0 if distance0 != 0 else 0
-    dx1 = (points[MID][0] - points[BOT][0]) / distance1 if distance1 != 0 else 0
-    dz1 = (points[MID][2] - points[BOT][2]) / distance1 if distance1 != 0 else 0
-
-    while y <= int(points[TOP][1]):
-
-        draw_line(int(x0), y, z0, int(x1), y, z1, screen, zbuffer, color)
-        x0+= dx0
-        z0+= dz0
-        x1+= dx1
-        z1+= dz1
-        y+= 1
-
-        if ( not flip and y >= int(points[MID][1])):
-            flip = True
-
-            dx1 = (points[TOP][0] - points[MID][0]) / distance2 if distance2 != 0 else 0
-            dz1 = (points[TOP][2] - points[MID][2]) / distance2 if distance2 != 0 else 0
-            x1 = points[MID][0]
-            z1 = points[MID][2]
-
-def add_polygon( polygons, x0, y0, z0, x1, y1, z1, x2, y2, z2 ):
-    add_point(polygons, x0, y0, z0);
-    add_point(polygons, x1, y1, z1);
-    add_point(polygons, x2, y2, z2);
-
-def draw_polygons( matrix, screen, zbuffer, view, ambient, light, areflect, dreflect, sreflect):
-    if len(matrix) < 2:
-        print 'Need at least 3 points to draw'
-        return
-
-    point = 0
-    while point < len(matrix) - 2:
-
-        normal = calculate_normal(matrix, point)[:]
-        if dot_product(normal, view) > 0:
-
-            color = get_lighting(normal, view, ambient, light, areflect, dreflect, sreflect )
-            scanline_convert(matrix, point, screen, zbuffer, color)
-
-            # draw_line( int(matrix[point][0]),
-            #            int(matrix[point][1]),
-            #            matrix[point][2],
-            #            int(matrix[point+1][0]),
-            #            int(matrix[point+1][1]),
-            #            matrix[point+1][2],
-            #            screen, zbuffer, color)
-            # draw_line( int(matrix[point+2][0]),
-            #            int(matrix[point+2][1]),
-            #            matrix[point+2][2],
-            #            int(matrix[point+1][0]),
-            #            int(matrix[point+1][1]),
-            #            matrix[point+1][2],
-            #            screen, zbuffer, color)
-            # draw_line( int(matrix[point][0]),
-            #            int(matrix[point][1]),
-            #            matrix[point][2],
-            #            int(matrix[point+2][0]),
-            #            int(matrix[point+2][1]),
-            #            matrix[point+2][2],
-            #            screen, zbuffer, color)
-        point+= 3
-
-
-def add_box( polygons, x, y, z, width, height, depth ):
-    x1 = x + width
-    y1 = y - height
-    z1 = z - depth
-
-    #front
-    add_polygon(polygons, x, y, z, x1, y1, z, x1, y, z);
-    add_polygon(polygons, x, y, z, x, y1, z, x1, y1, z);
-
-    #back
-    add_polygon(polygons, x1, y, z1, x, y1, z1, x, y, z1);
-    add_polygon(polygons, x1, y, z1, x1, y1, z1, x, y1, z1);
-
-    #right side
-    add_polygon(polygons, x1, y, z, x1, y1, z1, x1, y, z1);
-    add_polygon(polygons, x1, y, z, x1, y1, z, x1, y1, z1);
-    #left side
-    add_polygon(polygons, x, y, z1, x, y1, z, x, y, z);
-    add_polygon(polygons, x, y, z1, x, y1, z1, x, y1, z);
-
-    #top
-    add_polygon(polygons, x, y, z1, x1, y, z, x1, y, z1);
-    add_polygon(polygons, x, y, z1, x, y, z, x1, y, z);
-    #bottom
-    add_polygon(polygons, x, y1, z, x1, y1, z1, x1, y1, z);
-    add_polygon(polygons, x, y1, z, x, y1, z1, x1, y1, z1);
-
-def add_sphere( edges, cx, cy, cz, r, step ):
-    points = generate_sphere(cx, cy, cz, r, step)
+def add_cylinder( points, cx, cy, cz, r, h, step ):
+    points = generate_cylinder(cx, cy, cz, r, h, step)
+    print points
     lat_start = 0
     lat_stop = step
     longt_start = 0
@@ -139,104 +81,44 @@ def add_sphere( edges, cx, cy, cz, r, step ):
 
             if longt != step - 2:
                 add_polygon( edges, points[p0][0],
-                             points[p0][1],
-                             points[p0][2],
-                             points[p1][0],
-                             points[p1][1],
-                             points[p1][2],
-                             points[p2][0],
-                             points[p2][1],
-                             points[p2][2])
+                                 points[p0][1],
+                                 points[p0][2],
+                                 points[p1][0],
+                                 points[p1][1],
+                                 points[p1][2],
+                                 points[p2][0],
+                                 points[p2][1],
+                                 points[p2][2])
             if longt != 0:
                 add_polygon( edges, points[p0][0],
-                             points[p0][1],
-                             points[p0][2],
-                             points[p2][0],
-                             points[p2][1],
-                             points[p2][2],
-                             points[p3][0],
-                             points[p3][1],
-                             points[p3][2])
+                        points[p0][1],
+                                 points[p0][2],
+                                 points[p2][0],
+                                 points[p2][1],
+                                 points[p2][2],
+                                 points[p3][0],
+                                 points[p3][1],
+                                 points[p3][2])
 
-def generate_sphere( cx, cy, cz, r, step ):
+def generate_cylinder( points, cx, cy, cz, r, h, step ):
     points = []
-
-    rot_start = 0
-    rot_stop = step
+    move_start = 0
+    move_stop = step
     circ_start = 0
     circ_stop = step
-
-    for rotation in range(rot_start, rot_stop):
-        rot = rotation/float(step)
-        for circle in range(circ_start, circ_stop+1):
-            circ = circle/float(step)
-
-            x = r * math.cos(math.pi * circ) + cx
-            y = r * math.sin(math.pi * circ) * math.cos(2*math.pi * rot) + cy
-            z = r * math.sin(math.pi * circ) * math.sin(2*math.pi * rot) + cz
-
-            points.append([x, y, z])
-            #print 'rotation: %d\tcircle%d'%(rotation, circle)
-    return points
-
-def add_torus( edges, cx, cy, cz, r0, r1, step ):
-    points = generate_torus(cx, cy, cz, r0, r1, step)
-    lat_start = 0
-    lat_stop = step
-    longt_start = 0
-    longt_stop = step
-
-    for lat in range(lat_start, lat_stop):
-        for longt in range(longt_start, longt_stop):
-
-            p0 = lat * step + longt;
-            if (longt == (step - 1)):
-                p1 = p0 - longt;
-            else:
-                p1 = p0 + 1;
-            p2 = (p1 + step) % (step * step);
-            p3 = (p0 + step) % (step * step);
-
-            add_polygon(edges,
-                        points[p0][0],
-                        points[p0][1],
-                        points[p0][2],
-                        points[p3][0],
-                        points[p3][1],
-                        points[p3][2],
-                        points[p2][0],
-                        points[p2][1],
-                        points[p2][2] )
-            add_polygon(edges,
-                        points[p0][0],
-                        points[p0][1],
-                        points[p0][2],
-                        points[p2][0],
-                        points[p2][1],
-                        points[p2][2],
-                        points[p1][0],
-                        points[p1][1],
-                        points[p1][2] )
-
-def generate_torus( cx, cy, cz, r0, r1, step ):
-    points = []
-    rot_start = 0
-    rot_stop = step
-    circ_start = 0
-    circ_stop = step
-
-    for rotation in range(rot_start, rot_stop):
-        rot = rotation/float(step)
+    
+    for movement in range(move_start, move_stop):
+        move = movement/float(step)
         for circle in range(circ_start, circ_stop):
             circ = circle/float(step)
-
-            x = math.cos(2*math.pi * rot) * (r0 * math.cos(2*math.pi * circ) + r1) + cx;
-            y = r0 * math.sin(2*math.pi * circ) + cy;
-            z = -1*math.sin(2*math.pi * rot) * (r0 * math.cos(2*math.pi * circ) + r1) + cz;
-
-            points.append([x, y, z])
+            
+            x = r * math.cos(math.pi * circ) + cx
+            y = r * math.sin(math.pi * circ) + move * h + cy
+            z = r * math.sin(math.pi * circ) + cz
+            
+            points.append([x,y,z])
     return points
-
+        
 def add_circle( points, cx, cy, cz, r, step ):
     x0 = r + cx
     y0 = cy
@@ -267,104 +149,110 @@ def add_curve( points, x0, y0, x1, y1, x2, y2, x3, y3, step, curve_type ):
         y0 = y
         i+= 1
 
-
-def draw_lines( matrix, screen, zbuffer, color ):
+def draw_lines( matrix, screen, color ):
     if len(matrix) < 2:
         print 'Need at least 2 points to draw'
         return
-
+    
     point = 0
     while point < len(matrix) - 1:
         draw_line( int(matrix[point][0]),
                    int(matrix[point][1]),
-                   matrix[point][2],
                    int(matrix[point+1][0]),
                    int(matrix[point+1][1]),
-                   matrix[point+1][2],
-                   screen, zbuffer, color)
+                   screen, color)    
         point+= 2
-
+        
 def add_edge( matrix, x0, y0, z0, x1, y1, z1 ):
     add_point(matrix, x0, y0, z0)
     add_point(matrix, x1, y1, z1)
-
+    
 def add_point( matrix, x, y, z=0 ):
     matrix.append( [x, y, z, 1] )
+    
 
 
-def draw_line( x0, y0, z0, x1, y1, z1, screen, zbuffer, color ):
+
+def draw_line( x0, y0, x1, y1, screen, color ):
 
     #swap points if going right -> left
     if x0 > x1:
         xt = x0
         yt = y0
-        zt = z0
         x0 = x1
         y0 = y1
-        z0 = z1
         x1 = xt
         y1 = yt
-        z1 = zt
 
     x = x0
     y = y0
-    z = z0
     A = 2 * (y1 - y0)
     B = -2 * (x1 - x0)
-    wide = False
-    tall = False
 
-    if ( abs(x1-x0) >= abs(y1 - y0) ): #octants 1/8
-        wide = True
-        loop_start = x
-        loop_end = x1
-        dx_east = dx_northeast = 1
-        dy_east = 0
-        d_east = A
-        distance = x1 - x
-        if ( A > 0 ): #octant 1
+    #octants 1 and 8
+    if ( abs(x1-x0) >= abs(y1 - y0) ):
+
+        #octant 1
+        if A > 0:            
             d = A + B/2
-            dy_northeast = 1
-            d_northeast = A + B
-        else: #octant 8
-            d = A - B/2
-            dy_northeast = -1
-            d_northeast = A - B
 
-    else: #octants 2/7
-        tall = True
-        dx_east = 0
-        dx_northeast = 1
-        distance = abs(y1 - y)
-        if ( A > 0 ): #octant 2
-            d = A/2 + B
-            dy_east = dy_northeast = 1
-            d_northeast = A + B
-            d_east = B
-            loop_start = y
-            loop_end = y1
-        else: #octant 7
-            d = A/2 - B
-            dy_east = dy_northeast = -1
-            d_northeast = A - B
-            d_east = -1 * B
-            loop_start = y1
-            loop_end = y
+            while x < x1:
+                plot(screen, color, x, y)
+                if d > 0:
+                    y+= 1
+                    d+= B
+                x+= 1
+                d+= A
+            #end octant 1 while
+            plot(screen, color, x1, y1)
+        #end octant 1
 
-    dz = (z1 - z0) / distance if distance != 0 else 0
-
-    while ( loop_start < loop_end ):
-        plot( screen, zbuffer, color, x, y, z )
-        if ( (wide and ((A > 0 and d > 0) or (A < 0 and d < 0))) or
-             (tall and ((A > 0 and d < 0) or (A < 0 and d > 0 )))):
-
-            x+= dx_northeast
-            y+= dy_northeast
-            d+= d_northeast
+        #octant 8
         else:
-            x+= dx_east
-            y+= dy_east
-            d+= d_east
-        z+= dz
-        loop_start+= 1
-    plot( screen, zbuffer, color, x, y, z )
+            d = A - B/2
+
+            while x < x1:
+                plot(screen, color, x, y)
+                if d < 0:
+                    y-= 1
+                    d-= B
+                x+= 1
+                d+= A
+            #end octant 8 while
+            plot(screen, color, x1, y1)
+        #end octant 8
+    #end octants 1 and 8
+
+    #octants 2 and 7
+    else:
+        #octant 2
+        if A > 0:
+            d = A/2 + B
+
+            while y < y1:
+                plot(screen, color, x, y)
+                if d < 0:
+                    x+= 1
+                    d+= A
+                y+= 1
+                d+= B
+            #end octant 2 while
+            plot(screen, color, x1, y1)
+        #end octant 2
+
+        #octant 7
+        else:
+            d = A/2 - B;
+
+            while y > y1:
+                plot(screen, color, x, y)
+                if d > 0:
+                    x+= 1
+                    d+= A
+                y-= 1
+                d-= B
+            #end octant 7 while
+            plot(screen, color, x1, y1)
+        #end octant 7
+    #end octants 2 and 7
+#end draw_line
