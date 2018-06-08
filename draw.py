@@ -193,9 +193,9 @@ def add_torus( edges, cx, cy, cz, r0, r1, step ):
             if (longt == (step - 1)):
                 p1 = p0 - longt;
             else:
-                p1 = p0 + 1;
-            p2 = (p1 + step) % (step * step);
-            p3 = (p0 + step) % (step * step);
+                p1 = p0 + 1
+            p2 = (p1 + step) % (step * step)
+            p3 = (p0 + step) % (step * step)
 
             add_polygon(edges,
                         points[p0][0],
@@ -236,6 +236,64 @@ def generate_torus( cx, cy, cz, r0, r1, step ):
 
             points.append([x, y, z])
     return points
+
+def add_cylinder( points, cx, cy, cz, r, h, step ):
+    points = generate_cylinder(cx, cy, cz, r, h, step)
+    print points
+    lat_start = 0
+    lat_stop = step
+    longt_start = 0
+    longt_stop = step
+
+    step+= 1
+    for lat in range(lat_start, lat_stop):
+        for longt in range(longt_start, longt_stop):
+
+            p0 = lat * step + longt
+            p1 = p0+1
+            p2 = (p1+step) % (step * (step-1))
+            p3 = (p0+step) % (step * (step-1))
+
+            if longt != step - 2:
+                add_polygon( edges, points[p0][0],
+                             points[p0][1],
+                             points[p0][2],
+                             points[p1][0],
+                             points[p1][1],
+                             points[p1][2],
+                             points[p2][0],
+                             points[p2][1],
+                             points[p2][2])
+            if longt != 0:
+                add_polygon( edges, points[p0][0],
+                             points[p0][1],
+                             points[p0][2],
+                             points[p2][0],
+                             points[p2][1],
+                             points[p2][2],
+                             points[p3][0],
+                             points[p3][1],
+                             points[p3][2])
+
+def generate_cylinder( points, cx, cy, cz, r, h, step ):
+    points = []
+    move_start = 0
+    move_stop = step
+    circ_start = 0
+    circ_stop = step
+
+    for movement in range(move_start, move_stop):
+        move = movement/float(step)
+        for circle in range(circ_start, circ_stop):
+            circ = circle/float(step)
+
+            x = r * math.cos(math.pi * circ) + cx
+            y = r * math.sin(math.pi * circ) + move * h + cy
+            z = r * math.sin(math.pi * circ) + cz
+
+            points.append([x,y,z])
+    return points
+
 
 def add_circle( points, cx, cy, cz, r, step ):
     x0 = r + cx
