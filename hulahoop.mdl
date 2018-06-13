@@ -1,0 +1,18 @@
+basename hulahoop
+frames 40
+push
+move 250 250 0
+rotate y 360 spinny
+torus -100 0 0 10 165
+pop
+push
+move 250 250 0
+move 0 0 10 front
+move 10 0 0 side
+scale 1 4 1
+sphere 0 0 0 50
+vary spinny 0 39 0 1
+vary front 0 19 1 -1
+vary front 20 39 -1 1
+vary side 0 19 1 -1
+vary side 20 39 -1 1

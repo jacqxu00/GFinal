@@ -1,5 +1,5 @@
 from subprocess import Popen, PIPE
-from os import remove
+from os import remove, execlp, fork
 
 #constants
 XRES = 500
@@ -9,7 +9,7 @@ RED = 0
 GREEN = 1
 BLUE = 2
 
-DEFAULT_COLOR = [0, 0, 0]
+DEFAULT_COLOR = [255, 255, 255]
 
 def new_screen( width = XRES, height = YRES ):
     screen = []
@@ -20,15 +20,30 @@ def new_screen( width = XRES, height = YRES ):
             screen[y].append( DEFAULT_COLOR[:] )
     return screen
 
-def plot( screen, color, x, y ):
+def new_zbuffer( width = XRES, height = YRES ):
+    zb = []
+    for y in range( height ):
+        row = [ float('-inf') for x in range(width) ]
+        zb.append( row )
+    return zb
+
+def plot( screen, zbuffer, color, x, y, z ):
     newy = YRES - 1 - y
-    if ( x >= 0 and x < XRES and newy >= 0 and newy < YRES ):
+    z = int(z*1000/1000)
+    if ( x >= 0 and x < XRES and newy >= 0 and newy < YRES and
+         z >= zbuffer[newy][x]):
         screen[newy][x] = color[:]
+        zbuffer[newy][x] = z
 
 def clear_screen( screen ):
     for y in range( len(screen) ):
         for x in range( len(screen[y]) ):
             screen[y][x] = DEFAULT_COLOR[:]
+
+def clear_zbuffer( zb ):
+    for y in range( len(zb) ):
+        for x in range( len(zb[y]) ):
+            zb[y][x] = float('-inf')
 
 def save_ppm( screen, fname ):
     f = open( fname, 'w' )
@@ -58,3 +73,10 @@ def display( screen ):
     p.communicate()
     remove(ppm_name)
 
+def make_animation( name ):
+    name_arg = 'anim/' + name + '*'
+    name = name + '.gif'
+    print 'Saving animation as ' + name
+    f = fork()
+    if f == 0:
+        execlp('convert', 'convert', '-delay', '3', name_arg, name)
