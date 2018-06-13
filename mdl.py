@@ -17,6 +17,7 @@ tokens = (
     "CYLINDER",
     "CONE",
     "TETRAHEDRON",
+    "TRUNCCONE",
     "BOX",
     "LINE",
     "MESH",
@@ -58,6 +59,7 @@ reserved = {
     "sphere" : "SPHERE",
     "cylinder" : "CYLINDER",
     "tetrahedron" : "TETRAHEDRON",
+    "trunccone" : "TRUNCCONE",
     "cone" : "CONE",
     "box" : "BOX",
     "line" : "LINE",
@@ -234,6 +236,23 @@ def p_command_tetrahedron(p):
     if len(p) == 8 and isinstance(p[7], str):
           cmd['cs'] = p[7]
     cmd['args'] = p[arg_start:arg_start+4]
+    commands.append(cmd)
+
+def p_command_trunccone(p):
+    """command : TRUNCCONE NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
+               | TRUNCCONE SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
+               | TRUNCCONE NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL
+               | TRUNCCONE SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL"""
+    cmd = {'op' : p[1], 'constants' : None, 'cs' : None, 'args':[]}
+    arg_start = 2
+    if isinstance(p[2], str):
+        cmd['constants'] = p[2]
+        arg_start = 3
+    if len(p) == 9 and isinstance(p[8], str):
+        cmd['cs'] = p[8]
+    if len(p) == 10 and isinstance(p[9], str):
+          cmd['cs'] = p[9]
+    cmd['args'] = p[arg_start:arg_start+6]
     commands.append(cmd)
 
 def p_command_torus(p):

@@ -6,4 +6,5 @@ rotate x 360 rotato
 cylinder 0 0 0 50 100
 cone 100 100 0 50 100
 tetrahedron -200 -100 0 100
+trunccone 200 100 0 20 40 100
 vary rotato 0 19 0 1

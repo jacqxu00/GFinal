@@ -330,6 +330,72 @@ def add_cone(edges, cx, cy, cz, r, h, step):
                     top[points+1][1],
                     top[points+1][2])
 
+def add_trunc_cone(edges, cx, cy, cz, r1, r2, h, step):
+    top = []
+    bot = []
+    add_circle(bot, cx, cy, cz+h, r2, step)
+    add_circle(top, cx, cy, cz, r1, step)
+
+    #draw bases
+    for points in range(0, len(bot)-1):
+        add_polygon(edges, cx, cy, cz + h,
+                    bot[points][0],
+                    bot[points][1],
+                    bot[points][2],
+                    bot[points+1][0],
+                    bot[points+1][1],
+                    bot[points+1][2])
+        add_polygon(edges,
+                    top[points][0],
+                    top[points][1],
+                    top[points][2],
+                    cx, cy, cz,
+                    top[points+1][0],
+                    top[points+1][1],
+                    top[points+1][2])
+
+    #draw cone
+    for points in range(0, len(top)-1):
+        #front
+        add_polygon(edges,top[points][0],
+                          top[points][1],
+                          top[points][2],
+                          top[points+1][0],
+                          top[points+1][1],
+                          top[points+1][2],
+                          bot[points+1][0],
+                          bot[points+1][1],
+                          bot[points+1][2])
+        add_polygon(edges,top[points][0],
+                          top[points][1],
+                          top[points][2],
+                          bot[points+1][0],
+                          bot[points+1][1],
+                          bot[points+1][2],
+                          bot[points][0],
+                          bot[points][1],
+                          bot[points][2])
+        #back
+        add_polygon(edges,top[points+1][0],
+                          top[points+1][1],
+                          top[points+1][2],
+                          top[points][0],
+                          top[points][1],
+                          top[points][2],
+                          bot[points][0],
+                          bot[points][1],
+                          bot[points][2])
+        add_polygon(edges,top[points+1][0],
+                          top[points+1][1],
+                          top[points+1][2],
+                          bot[points][0],
+                          bot[points][1],
+                          bot[points][2],
+                          bot[points+1][0],
+                          bot[points+1][1],
+                          bot[points+1][2])
+
+
 def add_tetrahedron( polygons, x, y, z, a):
     h = int(a*sqrt(3) / 2)
     x1 = x + a/2
@@ -337,7 +403,7 @@ def add_tetrahedron( polygons, x, y, z, a):
     y2 = y + int(h/3)
     z1 = z + int(h/3)
     z2 = z+h
-    
+
     add_polygon( polygons,
                  x+a, y, z,
                  x, y, z,
