@@ -190,6 +190,12 @@ def run(filename):
                 matrix_mult( stack[-1], tmp )
                 draw_polygons(tmp, screen, zbuffer, view, ambient, light, areflect, dreflect, sreflect)
                 tmp = []
+            elif c == 'tetrahedron':
+                add_tetrahedron(tmp,
+                          args[0], args[1], args[2], args[3])
+                matrix_mult( stack[-1], tmp )
+                draw_polygons(tmp, screen, zbuffer, view, ambient, light, areflect, dreflect, sreflect)
+                tmp = []
             elif c == 'line':
                 if isinstance(args[0], str):
                     consts = args[0]

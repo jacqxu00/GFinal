@@ -238,25 +238,26 @@ def generate_torus( cx, cy, cz, r0, r1, step ):
             points.append([x, y, z])
     return points
 
-def add_cylinder(edges, x, y, z, radius, height, step):
+def add_cylinder(edges, cx, cy, cz, r, h, step):
     top = []
     bot = []
-    add_circle(bot, x, y, z + height, radius, step)
-    add_circle(top, x, y, z, radius, step)
+    add_circle(bot, cx, cy, cz + h, r, step)
+    add_circle(top, cx, cy, cz, r, step)
 
     #draw bases
     for points in range(0, len(bot)-1):
-        add_polygon(edges, x, y, z + height,
+        add_polygon(edges, cx, cy, cz + h,
                     bot[points][0],
                     bot[points][1],
                     bot[points][2],
                     bot[points+1][0],
                     bot[points+1][1],
                     bot[points+1][2])
-        add_polygon(edges, x, y, z,
+        add_polygon(edges,
                     top[points][0],
                     top[points][1],
                     top[points][2],
+                    cx, cy, cz,
                     top[points+1][0],
                     top[points+1][1],
                     top[points+1][2])
@@ -302,16 +303,15 @@ def add_cylinder(edges, x, y, z, radius, height, step):
                           bot[points+1][1],
                           bot[points+1][2])
 
-
-def add_cone(edges, x, y, z, radius, height, step):
+def add_cone(edges, cx, cy, cz, r, h, step):
     top = []
     bot = []
-    add_circle(bot, x, y, z+height, radius, step)
-    add_circle(top, x, y, z, radius, step)
+    add_circle(bot, cx, cy, cz+h, r, step)
+    add_circle(top, cx, cy, cz, r, step)
 
     #draw cone
     for points in range(0, len(top)-1):
-        add_polygon(edges, x, y, z+height,
+        add_polygon(edges, cx, cy, cz+h,
                     top[points][0],
                     top[points][1],
                     top[points][2],
@@ -321,13 +321,39 @@ def add_cone(edges, x, y, z, radius, height, step):
 
     #draw base
     for points in range(0, len(top)-1):
-        add_polygon(edges, x, y, z,
+        add_polygon(edges,
                     top[points][0],
                     top[points][1],
                     top[points][2],
+                    cx, cy, cz,
                     top[points+1][0],
                     top[points+1][1],
                     top[points+1][2])
+
+def add_tetrahedron( polygons, x, y, z, a):
+    h = int(a*sqrt(3) / 2)
+    x1 = x + a/2
+    y1 = y+h
+    y2 = y + int(h/3)
+    z1 = z + int(h/3)
+    z2 = z+h
+    
+    add_polygon( polygons,
+                 x+a, y, z,
+                 x, y, z,
+                 x1, y1, z1)
+    add_polygon( polygons,
+                 x+a, y, z,
+                 x1, y1, z1,
+                 x1, y, z2)
+    add_polygon( polygons,
+                 x1, y, z2,
+                 x, y, z,
+                 x+a, y, z)
+    add_polygon( polygons,
+                 x1, y1, z1,
+                 x, y, z,
+                 x1, y, z2)
 
 def add_circle( points, cx, cy, cz, r, step ):
     x0 = r + cx
