@@ -2,6 +2,7 @@ from display import *
 from matrix import *
 from math import *
 from gmath import *
+import pprint as pp
 
 def scanline_convert(polygons, i, screen, zbuffer, color ):
     flip = False
@@ -237,68 +238,96 @@ def generate_torus( cx, cy, cz, r0, r1, step ):
             points.append([x, y, z])
     return points
 
-def add_cylinder( edges, cx, cy, cz, r, h, step ):
-    points = generate_cylinder(cx, cy, cz, r, h, step)
-    print "len: "+str(len(points))
-    lat_start = 0
-    lat_stop = step
-    longt_start = 0
-    longt_stop = step
-    step+= 1
-    for lat in range(lat_start, lat_stop - 1):
-        for longt in range(longt_start, longt_stop):
+def add_cylinder(edges, x, y, z, radius, height, step):
+    top = []
+    bot = []
+    add_circle(bot, x, y, z + height, radius, step)
+    add_circle(top, x, y, z, radius, step)
 
-            p0 = lat * step + longt
-            if (longt == (step - 1)):
-                p1 = p0 - longt;
-            else:
-                p1 = p0 + 1;
-            p2 = (p1 + step) % (step * step) - 20
-            p3 = (p0 + step) % (step * step) - 20
-            print "p0: "+str(p0)
-            print "p1: "+str(p1)
-            print "p2: "+str(p2)
-            print "p3: "+str(p3)
+    #draw bases
+    for points in range(0, len(bot)-1):
+        add_polygon(edges, x, y, z + height,
+                    bot[points][0],
+                    bot[points][1],
+                    bot[points][2],
+                    bot[points+1][0],
+                    bot[points+1][1],
+                    bot[points+1][2])
+        add_polygon(edges, x, y, z,
+                    top[points][0],
+                    top[points][1],
+                    top[points][2],
+                    top[points+1][0],
+                    top[points+1][1],
+                    top[points+1][2])
 
-            if longt != step - 2:
-                add_polygon( edges, points[p0][0],
-                                 points[p0][1],
-                                 points[p0][2],
-                                 points[p1][0],
-                                 points[p1][1],
-                                 points[p1][2],
-                                 points[p2][0],
-                                 points[p2][1],
-                                 points[p2][2])
-            if longt != 0:
-                add_polygon( edges, points[p0][0],
-                             points[p0][1],
-                             points[p0][2],
-                             points[p2][0],
-                             points[p2][1],
-                             points[p2][2],
-                             points[p3][0],
-                             points[p3][1],
-                             points[p3][2])
+    #draw tube
+    for points in range(0, len(top)-1):
+        #front
+        add_polygon(edges,top[points][0],
+                          top[points][1],
+                          top[points][2],
+                          top[points+1][0],
+                          top[points+1][1],
+                          top[points+1][2],
+                          bot[points+1][0],
+                          bot[points+1][1],
+                          bot[points+1][2])
+        add_polygon(edges,top[points][0],
+                          top[points][1],
+                          top[points][2],
+                          bot[points+1][0],
+                          bot[points+1][1],
+                          bot[points+1][2],
+                          bot[points][0],
+                          bot[points][1],
+                          bot[points][2])
+        #back
+        add_polygon(edges,top[points+1][0],
+                          top[points+1][1],
+                          top[points+1][2],
+                          top[points][0],
+                          top[points][1],
+                          top[points][2],
+                          bot[points][0],
+                          bot[points][1],
+                          bot[points][2])
+        add_polygon(edges,top[points+1][0],
+                          top[points+1][1],
+                          top[points+1][2],
+                          bot[points][0],
+                          bot[points][1],
+                          bot[points][2],
+                          bot[points+1][0],
+                          bot[points+1][1],
+                          bot[points+1][2])
 
-def generate_cylinder( cx, cy, cz, r, h, step ):
-    points = []
-    move_start = 0
-    move_stop = step
-    circ_start = 0
-    circ_stop = step
 
-    for movement in range(move_start, move_stop):
-        move = movement/float(step)
-        for circle in range(circ_start, circ_stop):
-            circ = circle/float(step)
+def add_cone(edges, x, y, z, radius, height, step):
+    top = []
+    bot = []
+    add_circle(bot, x, y, z+height, radius, step)
+    add_circle(top, x, y, z, radius, step)
 
-            x = r * math.cos(math.pi * circ) + cx
-            y = move * h + cy
-            z = r * math.sin(math.pi * circ) + cz
+    #draw cone
+    for points in range(0, len(top)-1):
+        add_polygon(edges, x, y, z+height,
+                    top[points][0],
+                    top[points][1],
+                    top[points][2],
+                    top[points+1][0],
+                    top[points+1][1],
+                    top[points+1][2])
 
-            points.append([x,y,z])
-    return points
+    #draw base
+    for points in range(0, len(top)-1):
+        add_polygon(edges, x, y, z,
+                    top[points][0],
+                    top[points][1],
+                    top[points][2],
+                    top[points+1][0],
+                    top[points+1][1],
+                    top[points+1][2])
 
 def add_circle( points, cx, cy, cz, r, step ):
     x0 = r + cx
