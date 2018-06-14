@@ -17,7 +17,7 @@ tokens = (
     "CYLINDER",
     "CONE",
     "TETRAHEDRON",
-    "TRUNCCONE",
+    "FRUSTUM",
     "BOX",
     "LINE",
     "MESH",
@@ -59,7 +59,7 @@ reserved = {
     "sphere" : "SPHERE",
     "cylinder" : "CYLINDER",
     "tetrahedron" : "TETRAHEDRON",
-    "trunccone" : "TRUNCCONE",
+    "frustum" : "FRUSTUM",
     "cone" : "CONE",
     "box" : "BOX",
     "line" : "LINE",
@@ -238,11 +238,11 @@ def p_command_tetrahedron(p):
     cmd['args'] = p[arg_start:arg_start+4]
     commands.append(cmd)
 
-def p_command_trunccone(p):
-    """command : TRUNCCONE NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
-               | TRUNCCONE SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
-               | TRUNCCONE NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL
-               | TRUNCCONE SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL"""
+def p_command_frustum(p):
+    """command : FRUSTUM NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
+               | FRUSTUM SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER
+               | FRUSTUM NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL
+               | FRUSTUM SYMBOL NUMBER NUMBER NUMBER NUMBER NUMBER NUMBER SYMBOL"""
     cmd = {'op' : p[1], 'constants' : None, 'cs' : None, 'args':[]}
     arg_start = 2
     if isinstance(p[2], str):

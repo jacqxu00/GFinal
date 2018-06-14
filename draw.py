@@ -241,12 +241,12 @@ def generate_torus( cx, cy, cz, r0, r1, step ):
 def add_cylinder(edges, cx, cy, cz, r, h, step):
     top = []
     bot = []
-    add_circle(bot, cx, cy, cz + h, r, step)
+    add_circle(bot, cx, cy, cz+h, r, step)
     add_circle(top, cx, cy, cz, r, step)
 
     #draw bases
     for points in range(0, len(bot)-1):
-        add_polygon(edges, cx, cy, cz + h,
+        add_polygon(edges, cx, cy, cz+h,
                     bot[points][0],
                     bot[points][1],
                     bot[points][2],
@@ -306,8 +306,8 @@ def add_cylinder(edges, cx, cy, cz, r, h, step):
 def add_cone(edges, cx, cy, cz, r, h, step):
     top = []
     bot = []
-    add_circle(bot, cx, cy, cz+h, r, step)
-    add_circle(top, cx, cy, cz, r, step)
+    add_circle(top, cx, cy, cz+h, r, step)
+    add_circle(bot, cx, cy, cz, r, step)
 
     #draw cone
     for points in range(0, len(top)-1):
@@ -330,7 +330,7 @@ def add_cone(edges, cx, cy, cz, r, h, step):
                     top[points+1][1],
                     top[points+1][2])
 
-def add_trunc_cone(edges, cx, cy, cz, r1, r2, h, step):
+def add_frustum(edges, cx, cy, cz, r1, r2, h, step):
     top = []
     bot = []
     add_circle(bot, cx, cy, cz+h, r2, step)

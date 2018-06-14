@@ -196,8 +196,8 @@ def run(filename):
                 matrix_mult( stack[-1], tmp )
                 draw_polygons(tmp, screen, zbuffer, view, ambient, light, areflect, dreflect, sreflect)
                 tmp = []
-            elif c == 'trunccone':
-                add_trunc_cone(tmp,
+            elif c == 'frustum':
+                add_frustum(tmp,
                           args[0], args[1], args[2], args[3], args[4], args[5], step_3d)
                 matrix_mult( stack[-1], tmp )
                 draw_polygons(tmp, screen, zbuffer, view, ambient, light, areflect, dreflect, sreflect)
