@@ -1,12 +1,22 @@
-frames 20
+frames 110
 basename candies
 push
-move 250 250 0
-rotate x 360 rotato
-cylinder 0 0 0 30 100
-cone 0 0 40 40 100
-push
+move 250 550 0
+move 0 -600 0 movato
+rotate x 90
+rotate y 90
+rotate x 360 rotatoX
+rotate y 360 rotatoY
+rotate z 360 rotatoZ
+cylinder 0 0 0 50 100
+frustum 0 0 100 20 40 100
 rotate x 180
-move y -110
-cone 0 0 40 40 100
-vary rotato 0 19 0 1
+frustum 0 0 0 20 40 100
+vary rotatoX 30 49 0 1
+vary rotatoY 60 89 0 1
+vary rotatoZ 10 19 0 1
+vary rotatoZ 20 29 0 1
+vary rotatoZ 50 59 0 1
+vary rotatoZ 90 99 0 1
+vary movato 0 9 0 .5
+vary movato 100 109 .5 1
